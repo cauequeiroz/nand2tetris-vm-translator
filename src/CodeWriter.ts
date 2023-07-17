@@ -29,7 +29,14 @@ export default class CodeWriter {
   public writeArithmeticInstruction(instruction: Instruction): void {
     if (instruction.type !== 'C_ARITHMETIC') return;
 
-    if (instruction.command === 'add') {
+    if (['add', 'sub', 'and', 'or'].includes(instruction.command)) {
+      const actions = {
+        'add': 'D=D+M',
+        'sub': 'D=D-M',
+        'and': 'D=D&M',
+        'or': 'D=D|M'
+      } as Record<string, string>;
+
       this.writeOnOutputFile(`
         // ${instruction.comment}      
         @SP // Save [stack-1] on R15
@@ -42,12 +49,29 @@ export default class CodeWriter {
         M=M-1
         A=M
         D=M        
-        @R15 // D Register + R15
-        D=D+M        
+        @R15 // D Register [op] R15
+        ${actions[instruction.command]}        
         @SP // push D Register to stack
         A=M
         M=D
         @SP
+        M=M+1
+      `);
+    }
+
+    if (['not', 'neg'].includes(instruction.command)) {
+      const actions = {
+        'not': 'M=!M',
+        'neg': 'M=-M'
+      } as Record<string, string>;
+
+      this.writeOnOutputFile(`
+        // ${instruction.comment}      
+        @SP // Go to [stack-1]
+        M=M-1
+        A=M
+        ${actions[instruction.command]}
+        @SP // update stack pointer
         M=M+1
       `);
     }
