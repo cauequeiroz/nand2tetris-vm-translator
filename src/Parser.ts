@@ -1,19 +1,31 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-type Instruction = string;
+type MemorySegments = 'argument' | 'local' | 'static' | 'constant' | 'this' | 'that' | 'pointer' | 'temp';
+type ArithmeticCommands = 'add' | 'sub' | 'neg' | 'eq' | 'gt' | 'lt' | 'and' | 'or' | 'not';
+
+export type Instruction = 
+  | {
+    type: 'C_PUSH';
+    segment: MemorySegments;
+    value: number;
+    comment: string;
+  }
+  | {
+    type: 'C_ARITHMETIC';
+    command: ArithmeticCommands;
+    comment: string;
+  };
 
 export default class Parser {
   private file: string = "";
   private instructions: Instruction[] = [];
   private counter: number = 0;
-  private outputFile!: fs.WriteStream;
 
   public nextInstruction!: Instruction;
 
   constructor(filename: string) {
     this.getFileFromDisk(filename);
-    this.createOutputFile(filename);
     this.convertFileToInstructions();
     this.updateNextInstruction();
   }
@@ -25,17 +37,6 @@ export default class Parser {
     });
   }
 
-  private createOutputFile(filename: string) {
-    this.outputFile = fs.createWriteStream(
-      path.resolve(process.cwd(), filename.replace('.asm', '.hack')),
-      { flags: 'w' }
-    );    
-  }
-
-  public writeOnOutputFile(instruction: string) {
-    this.outputFile.write(`${instruction}\n`);
-  }
-
   public hasNextInstruction(): boolean {
     return this.counter < this.instructions.length;
   }
@@ -45,11 +46,6 @@ export default class Parser {
     this.updateNextInstruction();
   }
   
-  public reset(): void {
-    this.counter = 0;
-    this.updateNextInstruction();
-  }
-
   private convertFileToInstructions(): void {
     this.instructions = this.file
       .split("\n")
@@ -65,7 +61,22 @@ export default class Parser {
   }
 
   private createInstruction(instruction: string): Instruction {
-    return instruction;
+    const instructionParts = instruction.split(' ');
+
+    if (instructionParts[0] === 'push') {
+      return {
+        type: 'C_PUSH',
+        segment: instructionParts[1] as MemorySegments,
+        value: Number(instructionParts[2]),
+        comment: instruction
+      }
+    }
+
+    return {
+      type: 'C_ARITHMETIC',
+      command: instructionParts[0] as ArithmeticCommands,
+      comment: instruction
+    };
   }
 
   private updateNextInstruction(): void {
