@@ -1,0 +1,25 @@
+{
+  "name": "@cauequeiroz/nand2tetris-vm-translator",
+  "version": "1.0.0",
+  "description": "VM Translator written in Typescript for Nand2Tetris Hack Computer.",
+  "main": "dist/index.js",
+  "bin": {
+    "nand2tetris-vm-translator": "./dist/index.js"
+  },
+  "scripts": {
+    "start:dev": "npx nodemon",
+    "build": "npx tsc"
+  },
+  "keywords": ["vm", "nand2tetris", "hack", "cli", "translator"],
+  "author": "Caue Queiroz <cauenqueiroz@gmail.com> (http://cauequeiroz.com.br/)",
+  "license": "ISC",
+  "repository": "https://github.com/cauequeiroz/nand2tetris-vm-translator",
+  "homepage": "https://github.com/cauequeiroz/nand2tetris-vm-translator#readme",
+  "devDependencies": {
+    "@types/node": "^20.3.3",
+    "n-readlines": "^1.0.1",
+    "nodemon": "^2.0.22",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  }
+}
