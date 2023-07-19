@@ -14,13 +14,14 @@ class VMTranslator {
 
     while(this.parser.hasNextInstruction()) {
       let instruction = this.parser.nextInstruction;
+      let counter = this.parser.counter;
       
       if (instruction.type === "C_PUSH") {
-        this.codeWriter.writePushPopInstruction(instruction);
+        this.codeWriter.writePushInstruction(instruction);
       }
 
       if (instruction.type === "C_ARITHMETIC") {
-        this.codeWriter.writeArithmeticInstruction(instruction);
+        this.codeWriter.writeArithmeticInstruction(instruction, counter);
       }
 
       this.parser.advance();

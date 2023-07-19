@@ -9,7 +9,7 @@ export default class CodeWriter {
     this.createOutputFile(filename);
   }
 
-  public writePushPopInstruction(instruction: Instruction): void {
+  public writePushInstruction(instruction: Instruction): void {
     if (instruction.type !== 'C_PUSH') return;
 
     if (instruction.segment === 'constant') {
@@ -26,15 +26,30 @@ export default class CodeWriter {
     }
   }
 
-  public writeArithmeticInstruction(instruction: Instruction): void {
+  public writeArithmeticInstruction(instruction: Instruction, counter: number): void {
     if (instruction.type !== 'C_ARITHMETIC') return;
 
-    if (['add', 'sub', 'and', 'or'].includes(instruction.command)) {
+    if (['add', 'sub', 'and', 'or', 'eq', 'gt', 'lt'].includes(instruction.command)) {
+      const compareAction = (jump: string) => `
+          D=D-M
+          @IS_TRUE_${counter}
+          D;${jump}
+          D=0
+          @END_${counter}
+          0;JMP
+        (IS_TRUE_${counter})
+          D=-1
+        (END_${counter})
+      `;
+
       const actions = {
         'add': 'D=D+M',
         'sub': 'D=D-M',
         'and': 'D=D&M',
-        'or': 'D=D|M'
+        'or': 'D=D|M',
+        'eq': compareAction('JEQ'),
+        'lt': compareAction('JLT'),
+        'gt': compareAction('JGT')
       } as Record<string, string>;
 
       this.writeOnOutputFile(`
@@ -60,17 +75,12 @@ export default class CodeWriter {
     }
 
     if (['not', 'neg'].includes(instruction.command)) {
-      const actions = {
-        'not': 'M=!M',
-        'neg': 'M=-M'
-      } as Record<string, string>;
-
       this.writeOnOutputFile(`
         // ${instruction.comment}      
         @SP // Go to [stack-1]
         M=M-1
         A=M
-        ${actions[instruction.command]}
+        M=${instruction.command === 'not' ? '!' : '-'}M
         @SP // update stack pointer
         M=M+1
       `);

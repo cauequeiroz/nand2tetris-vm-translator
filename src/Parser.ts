@@ -20,7 +20,7 @@ export type Instruction =
 export default class Parser {
   private file: string = "";
   private instructions: Instruction[] = [];
-  private counter: number = 0;
+  public counter: number = 0;
 
   public nextInstruction!: Instruction;
 
