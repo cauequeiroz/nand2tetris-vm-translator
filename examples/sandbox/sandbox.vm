@@ -1,5 +1,0 @@
-push constant 22
-pop temp 0
-
-push constant 55
-push temp 0
