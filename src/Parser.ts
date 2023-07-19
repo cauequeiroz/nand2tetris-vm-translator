@@ -12,6 +12,12 @@ export type Instruction =
     comment: string;
   }
   | {
+    type: 'C_POP';
+    segment: MemorySegments;
+    value: number;
+    comment: string;
+  }
+  | {
     type: 'C_ARITHMETIC';
     command: ArithmeticCommands;
     comment: string;
@@ -66,6 +72,15 @@ export default class Parser {
     if (instructionParts[0] === 'push') {
       return {
         type: 'C_PUSH',
+        segment: instructionParts[1] as MemorySegments,
+        value: Number(instructionParts[2]),
+        comment: instruction
+      }
+    }
+
+    if (instructionParts[0] === 'pop') {
+      return {
+        type: 'C_POP',
         segment: instructionParts[1] as MemorySegments,
         value: Number(instructionParts[2]),
         comment: instruction

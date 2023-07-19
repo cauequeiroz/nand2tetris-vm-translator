@@ -8,7 +8,7 @@ class VMTranslator {
   private codeWriter: CodeWriter;
 
   constructor() {
-    const filename = process.argv[2] || './examples/StackArithmetic/SimpleAdd/SimpleAdd.vm';
+    const filename = process.argv[2] || './examples/MemoryAccess/BasicTest/BasicTest.vm';
     this.parser = new Parser(filename);
     this.codeWriter = new CodeWriter(filename);
 
@@ -18,6 +18,10 @@ class VMTranslator {
       
       if (instruction.type === "C_PUSH") {
         this.codeWriter.writePushInstruction(instruction);
+      }
+
+      if (instruction.type === "C_POP") {
+        this.codeWriter.writePopInstruction(instruction);
       }
 
       if (instruction.type === "C_ARITHMETIC") {

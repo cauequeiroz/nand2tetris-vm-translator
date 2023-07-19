@@ -1,6 +1,6 @@
 
-        // push constant 32767
-        @32767
+        // push constant 22
+        @22
         D=A
         @SP
         A=M
@@ -8,8 +8,16 @@
         @SP
         M=M+1
       
-        // push constant 32766
-        @32766
+      // pop temp 0
+      @SP
+      M=M-1
+      A=M
+      D=M
+      @5
+      M=D
+    
+        // push constant 55
+        @55
         D=A
         @SP
         A=M
@@ -17,30 +25,10 @@
         @SP
         M=M+1
       
-        // gt      
-        @SP // Save [stack-1] on R15
-        M=M-1
-        A=M
+        // push temp 0
+        @5 
         D=M
-        @R15
-        M=D  
-        @SP // Save [stack-2] on D Register
-        M=M-1
-        A=M
-        D=M        
-        @R15 // D Register [op] R15
-        
-          D=D-M
-          @IS_TRUE_2
-          D;JGT
-          D=0
-          @END_2
-          0;JMP
-        (IS_TRUE_2)
-          D=-1
-        (END_2)
-              
-        @SP // push D Register to stack
+        @SP
         A=M
         M=D
         @SP

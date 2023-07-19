@@ -4,6 +4,12 @@ import { Instruction } from './Parser';
 
 export default class CodeWriter {
   private outputFile!: fs.WriteStream;
+  private segmentLabel = {
+    'local': 'LCL',
+    'argument': 'ARG',
+    'this': 'THIS',
+    'that': 'THAT'
+  } as Record<string, string>;
 
   constructor(filename: string) {
     this.createOutputFile(filename);
@@ -23,6 +29,78 @@ export default class CodeWriter {
         @SP
         M=M+1
       `);
+    }
+
+    if (instruction.segment === 'temp') {
+      this.writeOnOutputFile(`
+        // ${instruction.comment}
+        @${5 + instruction.value} 
+        D=M
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+      `);
+    }
+
+    if (['local', 'argument', 'this', 'that'].includes(instruction.segment)) {
+      this.writeOnOutputFile(`
+        // ${instruction.comment}
+        @${this.segmentLabel[instruction.segment]}
+        D=M
+        @${instruction.value} 
+        D=D+A
+        A=D
+        D=M
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+      `);
+    }
+  }
+
+  public writePopInstruction(instruction: Instruction): void {
+    if (instruction.type !== 'C_POP') return;
+
+    if (['local', 'argument', 'this', 'that'].includes(instruction.segment)) {
+      this.writeOnOutputFile(`
+        // ${instruction.comment}
+        @SP
+        M=M-1
+        A=M
+        D=M
+
+        @R14
+        M=D
+
+        @${this.segmentLabel[instruction.segment]}
+        D=M
+        @${instruction.value} 
+        D=D+A
+        @R15
+        M=D
+
+        @R14
+        D=M
+        @R15
+        A=M
+        M=D
+      `);
+    }
+
+    if (instruction.segment === 'temp') {
+      this.writeOnOutputFile(`
+      // ${instruction.comment}
+      @SP
+      M=M-1
+      A=M
+      D=M
+      @${5 + instruction.value}
+      M=D
+    `);
     }
   }
 
