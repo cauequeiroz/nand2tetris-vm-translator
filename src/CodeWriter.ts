@@ -3,6 +3,7 @@ import * as path from 'path';
 import { Instruction } from './Parser';
 
 export default class CodeWriter {
+  private staticName: string;
   private outputFile!: fs.WriteStream;
   private segmentLabel = {
     'local': 'LCL',
@@ -12,6 +13,7 @@ export default class CodeWriter {
   } as Record<string, string>;
 
   constructor(filename: string) {
+    this.staticName = path.basename(filename).replace('.vm', '');
     this.createOutputFile(filename);
   }
 
@@ -35,6 +37,32 @@ export default class CodeWriter {
       this.writeOnOutputFile(`
         // ${instruction.comment}
         @${5 + instruction.value} 
+        D=M
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+      `);
+    }
+
+    if (instruction.segment === 'pointer') {
+      this.writeOnOutputFile(`
+        // ${instruction.comment}
+        @${instruction.value === 0 ? 'THIS' : 'THAT'} 
+        D=M
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+      `);
+    }
+
+    if (instruction.segment === 'static') {
+      this.writeOnOutputFile(`
+        // ${instruction.comment}
+        @${this.staticName}.${instruction.value} 
         D=M
         @SP
         A=M
@@ -99,6 +127,30 @@ export default class CodeWriter {
       A=M
       D=M
       @${5 + instruction.value}
+      M=D
+    `);
+    }
+
+    if (instruction.segment === 'pointer') {
+      this.writeOnOutputFile(`
+      // ${instruction.comment}
+      @SP
+      M=M-1
+      A=M
+      D=M
+      @${instruction.value === 0 ? 'THIS' : 'THAT'}
+      M=D
+    `);
+    }
+
+    if (instruction.segment === 'static') {
+      this.writeOnOutputFile(`
+      // ${instruction.comment}
+      @SP
+      M=M-1
+      A=M
+      D=M
+      @${this.staticName}.${instruction.value} 
       M=D
     `);
     }
@@ -173,7 +225,7 @@ export default class CodeWriter {
   }
 
   private writeOnOutputFile(instruction: string) {
-    console.log(instruction)
+    // console.log(instruction)
     this.outputFile.write(`${instruction}`);
   }
 }

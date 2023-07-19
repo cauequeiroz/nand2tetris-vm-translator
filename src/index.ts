@@ -8,7 +8,7 @@ class VMTranslator {
   private codeWriter: CodeWriter;
 
   constructor() {
-    const filename = process.argv[2] || './examples/MemoryAccess/BasicTest/BasicTest.vm';
+    const filename = process.argv[2] || './examples/MemoryAccess/StaticTest/StaticTest.vm';
     this.parser = new Parser(filename);
     this.codeWriter = new CodeWriter(filename);
 
