@@ -34,6 +34,10 @@ export type Instruction =
     name: string;
     numberOfLocals: number;
     comment: string;
+  }
+  | {
+    type: 'C_RETURN';
+    comment: string;
   };
 
 export default class Parser {
@@ -114,6 +118,13 @@ export default class Parser {
         type: 'C_FUNCTION',
         name: instructionParts[1],
         numberOfLocals: Number(instructionParts[2]),
+        comment: instruction
+      }
+    }
+
+    if (instructionParts[0] === 'return') {
+      return {
+        type: 'C_RETURN',
         comment: instruction
       }
     }

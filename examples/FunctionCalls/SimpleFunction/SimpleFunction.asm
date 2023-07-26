@@ -137,3 +137,67 @@
         @SP
         M=M+1
       
+      // return
+        // Save *LCL on endFrame (R13)
+        @LCL
+        D=M
+        @R13
+        M=D
+        // Save returnAddressLabel (R14)
+        @5
+        D=D-A
+        A=D
+        D=M
+        @R14
+        M=D
+        // Get [stack-1]
+        @SP
+        M=M-1
+        A=M
+        D=M
+        // ARG 0 = [stack-1]
+        @ARG
+        A=M
+        M=D
+        // SP = ARG 0 + 1
+        D=A+1
+        @SP
+        M=D
+        // Restore @THAT
+        @R13
+        A=M-1
+        D=M
+        @THAT
+        M=D
+        // Restore @THIS
+        @R13
+        D=M
+        @2
+        D=D-A
+        A=D
+        D=M
+        @THIS
+        M=D
+        // Restore @ARG
+        @R13
+        D=M
+        @3
+        D=D-A
+        A=D
+        D=M
+        @ARG
+        M=D
+        // Restore @LCL
+        @R13
+        D=M
+        @4
+        D=D-A
+        A=D
+        D=M
+        @LCL
+        M=D
+        // Jump to returnAddressLabel
+        @R14
+        A=M
+        0;JMP
+    

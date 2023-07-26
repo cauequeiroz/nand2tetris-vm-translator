@@ -36,6 +36,10 @@ class VMTranslator {
         this.codeWriter.writeFunctionInstruction(instruction);
       }
 
+      if (instruction.type === "C_RETURN") {
+        this.codeWriter.writeReturnInstruction();
+      }
+
       this.parser.advance();
     }
   }
