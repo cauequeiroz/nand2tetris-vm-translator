@@ -217,6 +217,37 @@ export default class CodeWriter {
     }
   }
 
+  public writeBranchingInstruction(instruction: Instruction): void {
+    if (instruction.type !== 'C_BRANCHING') return;
+
+    if (instruction.command === 'label') {
+      this.writeOnOutputFile(`
+        // ${instruction.comment}      
+        (${instruction.name})
+      `);
+    }
+
+    if (instruction.command === 'if-goto') {
+      this.writeOnOutputFile(`
+        // ${instruction.comment}      
+        @SP // Get [stack-1]
+        M=M-1
+        A=M
+        D=M
+        @${instruction.name}
+        D;JNE
+      `);
+    }
+
+    if (instruction.command === 'goto') {
+      this.writeOnOutputFile(`
+        // ${instruction.comment}      
+        @${instruction.name}
+        0;JMP
+      `);
+    }
+  }
+
   private createOutputFile(filename: string) {
     this.outputFile = fs.createWriteStream(
       path.resolve(process.cwd(), filename.replace('.vm', '.asm')),

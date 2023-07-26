@@ -8,7 +8,7 @@ class VMTranslator {
   private codeWriter: CodeWriter;
 
   constructor() {
-    const filename = process.argv[2] || './examples/MemoryAccess/StaticTest/StaticTest.vm';
+    const filename = process.argv[2] || './examples/ProgramFlow/FibonacciSeries/FibonacciSeries.vm';
     this.parser = new Parser(filename);
     this.codeWriter = new CodeWriter(filename);
 
@@ -26,6 +26,10 @@ class VMTranslator {
 
       if (instruction.type === "C_ARITHMETIC") {
         this.codeWriter.writeArithmeticInstruction(instruction, counter);
+      }
+
+      if (instruction.type === "C_BRANCHING") {
+        this.codeWriter.writeBranchingInstruction(instruction);
       }
 
       this.parser.advance();

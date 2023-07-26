@@ -3,6 +3,7 @@ import * as path from 'path';
 
 type MemorySegments = 'argument' | 'local' | 'static' | 'constant' | 'this' | 'that' | 'pointer' | 'temp';
 type ArithmeticCommands = 'add' | 'sub' | 'neg' | 'eq' | 'gt' | 'lt' | 'and' | 'or' | 'not';
+type BranchingCommands = 'label' | 'if-goto' | 'goto';
 
 export type Instruction = 
   | {
@@ -20,6 +21,12 @@ export type Instruction =
   | {
     type: 'C_ARITHMETIC';
     command: ArithmeticCommands;
+    comment: string;
+  }
+  | {
+    type: 'C_BRANCHING';
+    command: BranchingCommands;
+    name: string;
     comment: string;
   };
 
@@ -83,6 +90,15 @@ export default class Parser {
         type: 'C_POP',
         segment: instructionParts[1] as MemorySegments,
         value: Number(instructionParts[2]),
+        comment: instruction
+      }
+    }
+
+    if (['label', 'if-goto', 'goto'].includes(instructionParts[0])) {
+      return {
+        type: 'C_BRANCHING',
+        command: instructionParts[0] as BranchingCommands,
+        name: instructionParts[1],
         comment: instruction
       }
     }
