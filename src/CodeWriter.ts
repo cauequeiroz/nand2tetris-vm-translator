@@ -248,6 +248,24 @@ export default class CodeWriter {
     }
   }
 
+  public writeFunctionInstruction(instruction: Instruction): void {
+    if (instruction.type !== 'C_FUNCTION') return;
+
+    this.writeOnOutputFile(`
+      // ${instruction.comment}      
+      (${instruction.name})      
+    `);
+
+    for (let i=0; i<instruction.numberOfLocals; i++) {
+      this.writePushInstruction({
+        type: 'C_PUSH',
+        segment: 'constant',
+        value: 0,
+        comment: "push constant 0"
+      });
+    }
+  }
+
   private createOutputFile(filename: string) {
     this.outputFile = fs.createWriteStream(
       path.resolve(process.cwd(), filename.replace('.vm', '.asm')),

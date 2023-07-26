@@ -28,6 +28,12 @@ export type Instruction =
     command: BranchingCommands;
     name: string;
     comment: string;
+  }
+  | {
+    type: 'C_FUNCTION';
+    name: string;
+    numberOfLocals: number;
+    comment: string;
   };
 
 export default class Parser {
@@ -99,6 +105,15 @@ export default class Parser {
         type: 'C_BRANCHING',
         command: instructionParts[0] as BranchingCommands,
         name: instructionParts[1],
+        comment: instruction
+      }
+    }
+
+    if (instructionParts[0] === 'function') {
+      return {
+        type: 'C_FUNCTION',
+        name: instructionParts[1],
+        numberOfLocals: Number(instructionParts[2]),
         comment: instruction
       }
     }

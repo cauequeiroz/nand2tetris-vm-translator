@@ -8,7 +8,7 @@ class VMTranslator {
   private codeWriter: CodeWriter;
 
   constructor() {
-    const filename = process.argv[2] || './examples/ProgramFlow/FibonacciSeries/FibonacciSeries.vm';
+    const filename = process.argv[2] || './examples/FunctionCalls/SimpleFunction/SimpleFunction.vm';
     this.parser = new Parser(filename);
     this.codeWriter = new CodeWriter(filename);
 
@@ -30,6 +30,10 @@ class VMTranslator {
 
       if (instruction.type === "C_BRANCHING") {
         this.codeWriter.writeBranchingInstruction(instruction);
+      }
+
+      if (instruction.type === "C_FUNCTION") {
+        this.codeWriter.writeFunctionInstruction(instruction);
       }
 
       this.parser.advance();
