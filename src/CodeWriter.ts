@@ -3,7 +3,7 @@ import * as path from 'path';
 import { Instruction } from './Parser';
 
 export default class CodeWriter {
-  private programName: string;
+  private programName!: string;
   private outputFile!: fs.WriteStream;
   private segmentLabel = {
     'local': 'LCL',
@@ -16,7 +16,7 @@ export default class CodeWriter {
   private returnCounter: number = 0;
 
   constructor(filename: string) {
-    this.programName = filename.split('/').pop() as string;
+    this.handleProgramName(filename);
     this.createOutputFile(filename);
   }
 
@@ -423,6 +423,15 @@ export default class CodeWriter {
     `);
 
     this.returnCounter++;
+  }
+
+  private handleProgramName(filename: string): void {
+    if (!filename.endsWith("/")) {
+      filename += "/";
+    }
+
+    const directories = filename.split('/');
+    this.programName = directories[directories.length - 2];
   }
 
   private createOutputFile(filename: string) {

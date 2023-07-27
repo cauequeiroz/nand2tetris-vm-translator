@@ -34,7 +34,7 @@ var CodeWriter = /** @class */ (function () {
             'that': 'THAT'
         };
         this.returnCounter = 0;
-        this.programName = filename.split('/').pop();
+        this.handleProgramName(filename);
         this.createOutputFile(filename);
     }
     CodeWriter.prototype.writeBootstrapInstructions = function () {
@@ -138,6 +138,13 @@ var CodeWriter = /** @class */ (function () {
         var returnLabel = "".concat(this.functionName, "$ret.").concat(this.returnCounter);
         this.writeOnOutputFile("\n      // ".concat(instruction.comment, "\n        // push returnLabel\n        @").concat(returnLabel, "\n        D=A\n        @SP\n        A=M\n        M=D\n        @SP\n        M=M+1\n        // push current LCL\n        @LCL\n        D=M\n        @SP\n        A=M\n        M=D\n        @SP\n        M=M+1\n        // push current ARG\n        @ARG\n        D=M\n        @SP\n        A=M\n        M=D\n        @SP\n        M=M+1\n        // push current THIS\n        @THIS\n        D=M\n        @SP\n        A=M\n        M=D\n        @SP\n        M=M+1\n        // push current THAT\n        @THAT\n        D=M\n        @SP\n        A=M\n        M=D\n        @SP\n        M=M+1\n        // ARG = SP - (5 + numberOfArgs)\n        @SP\n        D=M\n        @").concat(5 + instruction.numberOfArgs, "\n        D=D-A\n        @ARG\n        M=D\n        // LCL = SP\n        @SP\n        D=M\n        @LCL\n        M=D\n        // Jump to function\n        @").concat(instruction.name, "\n        0;JMP\n      (").concat(returnLabel, ")      \n    "));
         this.returnCounter++;
+    };
+    CodeWriter.prototype.handleProgramName = function (filename) {
+        if (!filename.endsWith("/")) {
+            filename += "/";
+        }
+        var directories = filename.split('/');
+        this.programName = directories[directories.length - 2];
     };
     CodeWriter.prototype.createOutputFile = function (filename) {
         this.outputFile = fs.createWriteStream(path.resolve(process.cwd(), filename, "".concat(this.programName, ".asm")), { flags: 'w' });
