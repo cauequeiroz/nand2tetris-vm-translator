@@ -426,12 +426,7 @@ export default class CodeWriter {
   }
 
   private handleProgramName(filename: string): void {
-    if (!filename.endsWith("/")) {
-      filename += "/";
-    }
-
-    const directories = filename.split('/');
-    this.programName = directories[directories.length - 2];
+    this.programName = path.basename(filename);
   }
 
   private createOutputFile(filename: string) {
@@ -442,7 +437,6 @@ export default class CodeWriter {
   }
 
   private writeOnOutputFile(instruction: string) {
-    // console.log(instruction)
     this.outputFile.write(`${instruction}`);
   }
 }

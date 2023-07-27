@@ -140,17 +140,12 @@ var CodeWriter = /** @class */ (function () {
         this.returnCounter++;
     };
     CodeWriter.prototype.handleProgramName = function (filename) {
-        if (!filename.endsWith("/")) {
-            filename += "/";
-        }
-        var directories = filename.split('/');
-        this.programName = directories[directories.length - 2];
+        this.programName = path.basename(filename);
     };
     CodeWriter.prototype.createOutputFile = function (filename) {
         this.outputFile = fs.createWriteStream(path.resolve(process.cwd(), filename, "".concat(this.programName, ".asm")), { flags: 'w' });
     };
     CodeWriter.prototype.writeOnOutputFile = function (instruction) {
-        // console.log(instruction)
         this.outputFile.write("".concat(instruction));
     };
     return CodeWriter;
