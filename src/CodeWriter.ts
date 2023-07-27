@@ -15,7 +15,7 @@ export default class CodeWriter {
   private returnCounter: number = 0;
 
   constructor(filename: string) {
-    this.staticName = path.basename(filename).replace('.vm', '');
+    this.staticName = filename.split('/').pop() as string;
     this.createOutputFile(filename);
   }
 
@@ -408,10 +408,9 @@ export default class CodeWriter {
 
   private createOutputFile(filename: string) {
     this.outputFile = fs.createWriteStream(
-      // path.resolve(process.cwd(), filename.replace('.vm', '.asm')),
-      path.resolve(process.cwd(), filename.replace('Sys.vm', 'NestedCall.asm')),
+      path.resolve(process.cwd(), filename, `${this.staticName}.asm`),
       { flags: 'w' }
-    );    
+    );
   }
 
   private writeOnOutputFile(instruction: string) {

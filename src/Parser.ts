@@ -60,9 +60,13 @@ export default class Parser {
   }
 
   private getFileFromDisk(filename: string): void {
-    this.file = fs.readFileSync(path.resolve(process.cwd(), filename), {
-      encoding: "utf-8",
-      flag: "r"
+    const completePath = path.resolve(process.cwd(), filename);
+
+    fs.readdirSync(completePath).forEach((file) => {
+      if (file.endsWith('.vm')) {
+        const fileContent = fs.readFileSync(path.resolve(completePath, file)).toString();
+        this.file += fileContent;
+      }
     });
   }
 

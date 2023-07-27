@@ -8,7 +8,7 @@ class VMTranslator {
   private codeWriter: CodeWriter;
 
   constructor() {
-    const filename = process.argv[2] || './examples/FunctionCalls/NestedCall/Sys.vm';
+    const filename = process.argv[2] || './examples/FunctionCalls/FibonacciElement';
     this.parser = new Parser(filename);
     this.codeWriter = new CodeWriter(filename);
 
