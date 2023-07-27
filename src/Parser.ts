@@ -36,6 +36,12 @@ export type Instruction =
     comment: string;
   }
   | {
+    type: 'C_CALL';
+    name: string;
+    numberOfArgs: number;
+    comment: string;
+  }
+  | {
     type: 'C_RETURN';
     comment: string;
   };
@@ -118,6 +124,15 @@ export default class Parser {
         type: 'C_FUNCTION',
         name: instructionParts[1],
         numberOfLocals: Number(instructionParts[2]),
+        comment: instruction
+      }
+    }
+
+    if (instructionParts[0] === 'call') {
+      return {
+        type: 'C_CALL',
+        name: instructionParts[1],
+        numberOfArgs: Number(instructionParts[2]),
         comment: instruction
       }
     }

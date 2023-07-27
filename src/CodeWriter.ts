@@ -12,6 +12,7 @@ export default class CodeWriter {
     'that': 'THAT'
   } as Record<string, string>;
   private functionName!: string;
+  private returnCounter: number = 0;
 
   constructor(filename: string) {
     this.staticName = path.basename(filename).replace('.vm', '');
@@ -337,9 +338,78 @@ export default class CodeWriter {
     `)
   }
 
+  public writeCallInstruction(instruction: Instruction): void {
+    if (instruction.type !== 'C_CALL') return;
+
+    const returnLabel = `${this.functionName}$ret.${this.returnCounter}`;
+
+    this.writeOnOutputFile(`
+      // ${instruction.comment}
+        // push returnLabel
+        @${returnLabel}
+        D=A
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+        // push current LCL
+        @LCL
+        D=M
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+        // push current ARG
+        @ARG
+        D=M
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+        // push current THIS
+        @THIS
+        D=M
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+        // push current THAT
+        @THAT
+        D=M
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+        // ARG = SP - (5 + numberOfArgs)
+        @SP
+        D=M
+        @${5 + instruction.numberOfArgs}
+        D=D-A
+        @ARG
+        M=D
+        // LCL = SP
+        @SP
+        D=M
+        @LCL
+        M=D
+        // Jump to function
+        @${instruction.name}
+        0;JMP
+      (${returnLabel})      
+    `);
+
+    this.returnCounter++;
+  }
+
   private createOutputFile(filename: string) {
     this.outputFile = fs.createWriteStream(
-      path.resolve(process.cwd(), filename.replace('.vm', '.asm')),
+      // path.resolve(process.cwd(), filename.replace('.vm', '.asm')),
+      path.resolve(process.cwd(), filename.replace('Sys.vm', 'NestedCall.asm')),
       { flags: 'w' }
     );    
   }

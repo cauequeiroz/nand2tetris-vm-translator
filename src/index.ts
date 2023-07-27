@@ -8,7 +8,7 @@ class VMTranslator {
   private codeWriter: CodeWriter;
 
   constructor() {
-    const filename = process.argv[2] || './examples/FunctionCalls/SimpleFunction/SimpleFunction.vm';
+    const filename = process.argv[2] || './examples/FunctionCalls/NestedCall/Sys.vm';
     this.parser = new Parser(filename);
     this.codeWriter = new CodeWriter(filename);
 
@@ -34,6 +34,10 @@ class VMTranslator {
 
       if (instruction.type === "C_FUNCTION") {
         this.codeWriter.writeFunctionInstruction(instruction);
+      }
+
+      if (instruction.type === "C_CALL") {
+        this.codeWriter.writeCallInstruction(instruction);
       }
 
       if (instruction.type === "C_RETURN") {
