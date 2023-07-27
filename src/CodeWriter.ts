@@ -3,7 +3,7 @@ import * as path from 'path';
 import { Instruction } from './Parser';
 
 export default class CodeWriter {
-  private staticName: string;
+  private programName: string;
   private outputFile!: fs.WriteStream;
   private segmentLabel = {
     'local': 'LCL',
@@ -12,10 +12,11 @@ export default class CodeWriter {
     'that': 'THAT'
   } as Record<string, string>;
   private functionName!: string;
+  private className!: string;
   private returnCounter: number = 0;
 
   constructor(filename: string) {
-    this.staticName = filename.split('/').pop() as string;
+    this.programName = filename.split('/').pop() as string;
     this.createOutputFile(filename);
   }
 
@@ -81,7 +82,7 @@ export default class CodeWriter {
     if (instruction.segment === 'static') {
       this.writeOnOutputFile(`
         // ${instruction.comment}
-        @${this.staticName}.${instruction.value} 
+        @${this.className}.${instruction.value} 
         D=M
         @SP
         A=M
@@ -169,7 +170,7 @@ export default class CodeWriter {
       M=M-1
       A=M
       D=M
-      @${this.staticName}.${instruction.value} 
+      @${this.className}.${instruction.value} 
       M=D
     `);
     }
@@ -271,6 +272,7 @@ export default class CodeWriter {
     if (instruction.type !== 'C_FUNCTION') return;
 
     this.functionName = instruction.name;
+    this.className = instruction.name.split('.')[0];
 
     this.writeOnOutputFile(`
       // ${instruction.comment}      
@@ -425,7 +427,7 @@ export default class CodeWriter {
 
   private createOutputFile(filename: string) {
     this.outputFile = fs.createWriteStream(
-      path.resolve(process.cwd(), filename, `${this.staticName}.asm`),
+      path.resolve(process.cwd(), filename, `${this.programName}.asm`),
       { flags: 'w' }
     );
   }
