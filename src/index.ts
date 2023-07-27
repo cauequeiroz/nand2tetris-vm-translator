@@ -12,6 +12,8 @@ class VMTranslator {
     this.parser = new Parser(filename);
     this.codeWriter = new CodeWriter(filename);
 
+    this.codeWriter.writeBootstrapInstructions();
+
     while(this.parser.hasNextInstruction()) {
       let instruction = this.parser.nextInstruction;
       let counter = this.parser.counter;

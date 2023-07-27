@@ -19,6 +19,23 @@ export default class CodeWriter {
     this.createOutputFile(filename);
   }
 
+  public writeBootstrapInstructions(): void {
+    this.writeOnOutputFile(`
+      // Bootstrap code: Initialize SP  
+      @256
+      D=A
+      @SP
+      M=D
+    `);
+
+    this.writeCallInstruction({
+      type: 'C_CALL',
+      name: 'Sys.init',
+      numberOfArgs: 0,
+      comment: 'Bootstrap code: call Sys.init'
+    });
+  }
+
   public writePushInstruction(instruction: Instruction): void {
     if (instruction.type !== 'C_PUSH') return;
 
