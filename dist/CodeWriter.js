@@ -33,9 +33,19 @@ var CodeWriter = /** @class */ (function () {
             'this': 'THIS',
             'that': 'THAT'
         };
-        this.staticName = path.basename(filename).replace('.vm', '');
+        this.returnCounter = 0;
+        this.programName = filename.split('/').pop();
         this.createOutputFile(filename);
     }
+    CodeWriter.prototype.writeBootstrapInstructions = function () {
+        this.writeOnOutputFile("\n      // Bootstrap code: Initialize SP  \n      @256\n      D=A\n      @SP\n      M=D\n    ");
+        this.writeCallInstruction({
+            type: 'C_CALL',
+            name: 'Sys.init',
+            numberOfArgs: 0,
+            comment: 'Bootstrap code: call Sys.init'
+        });
+    };
     CodeWriter.prototype.writePushInstruction = function (instruction) {
         if (instruction.type !== 'C_PUSH')
             return;
@@ -49,7 +59,7 @@ var CodeWriter = /** @class */ (function () {
             this.writeOnOutputFile("\n        // ".concat(instruction.comment, "\n        @").concat(instruction.value === 0 ? 'THIS' : 'THAT', " \n        D=M\n        @SP\n        A=M\n        M=D\n        @SP\n        M=M+1\n      "));
         }
         if (instruction.segment === 'static') {
-            this.writeOnOutputFile("\n        // ".concat(instruction.comment, "\n        @").concat(this.staticName, ".").concat(instruction.value, " \n        D=M\n        @SP\n        A=M\n        M=D\n        @SP\n        M=M+1\n      "));
+            this.writeOnOutputFile("\n        // ".concat(instruction.comment, "\n        @").concat(this.className, ".").concat(instruction.value, " \n        D=M\n        @SP\n        A=M\n        M=D\n        @SP\n        M=M+1\n      "));
         }
         if (['local', 'argument', 'this', 'that'].includes(instruction.segment)) {
             this.writeOnOutputFile("\n        // ".concat(instruction.comment, "\n        @").concat(this.segmentLabel[instruction.segment], "\n        D=M\n        @").concat(instruction.value, " \n        D=D+A\n        A=D\n        D=M\n        @SP\n        A=M\n        M=D\n        @SP\n        M=M+1\n      "));
@@ -68,7 +78,7 @@ var CodeWriter = /** @class */ (function () {
             this.writeOnOutputFile("\n      // ".concat(instruction.comment, "\n      @SP\n      M=M-1\n      A=M\n      D=M\n      @").concat(instruction.value === 0 ? 'THIS' : 'THAT', "\n      M=D\n    "));
         }
         if (instruction.segment === 'static') {
-            this.writeOnOutputFile("\n      // ".concat(instruction.comment, "\n      @SP\n      M=M-1\n      A=M\n      D=M\n      @").concat(this.staticName, ".").concat(instruction.value, " \n      M=D\n    "));
+            this.writeOnOutputFile("\n      // ".concat(instruction.comment, "\n      @SP\n      M=M-1\n      A=M\n      D=M\n      @").concat(this.className, ".").concat(instruction.value, " \n      M=D\n    "));
         }
     };
     CodeWriter.prototype.writeArithmeticInstruction = function (instruction, counter) {
@@ -91,8 +101,46 @@ var CodeWriter = /** @class */ (function () {
             this.writeOnOutputFile("\n        // ".concat(instruction.comment, "      \n        @SP // Go to [stack-1]\n        M=M-1\n        A=M\n        M=").concat(instruction.command === 'not' ? '!' : '-', "M\n        @SP // update stack pointer\n        M=M+1\n      "));
         }
     };
+    CodeWriter.prototype.writeBranchingInstruction = function (instruction) {
+        if (instruction.type !== 'C_BRANCHING')
+            return;
+        if (instruction.command === 'label') {
+            this.writeOnOutputFile("\n        // ".concat(instruction.comment, "      \n        (").concat(this.functionName, "$").concat(instruction.name, ")\n      "));
+        }
+        if (instruction.command === 'if-goto') {
+            this.writeOnOutputFile("\n        // ".concat(instruction.comment, "      \n        @SP // Get [stack-1]\n        M=M-1\n        A=M\n        D=M\n        @").concat(this.functionName, "$").concat(instruction.name, "\n        D;JNE\n      "));
+        }
+        if (instruction.command === 'goto') {
+            this.writeOnOutputFile("\n        // ".concat(instruction.comment, "      \n        @").concat(this.functionName, "$").concat(instruction.name, "\n        0;JMP\n      "));
+        }
+    };
+    CodeWriter.prototype.writeFunctionInstruction = function (instruction) {
+        if (instruction.type !== 'C_FUNCTION')
+            return;
+        this.functionName = instruction.name;
+        this.className = instruction.name.split('.')[0];
+        this.writeOnOutputFile("\n      // ".concat(instruction.comment, "      \n      (").concat(instruction.name, ")      \n    "));
+        for (var i = 0; i < instruction.numberOfLocals; i++) {
+            this.writePushInstruction({
+                type: 'C_PUSH',
+                segment: 'constant',
+                value: 0,
+                comment: "push constant 0"
+            });
+        }
+    };
+    CodeWriter.prototype.writeReturnInstruction = function () {
+        this.writeOnOutputFile("\n      // return\n        // Save *LCL on endFrame (R13)\n        @LCL\n        D=M\n        @R13\n        M=D\n        // Save returnAddressLabel (R14)\n        @5\n        D=D-A\n        A=D\n        D=M\n        @R14\n        M=D\n        // Get [stack-1]\n        @SP\n        M=M-1\n        A=M\n        D=M\n        // ARG 0 = [stack-1]\n        @ARG\n        A=M\n        M=D\n        // SP = ARG 0 + 1\n        D=A+1\n        @SP\n        M=D\n        // Restore @THAT\n        @R13\n        A=M-1\n        D=M\n        @THAT\n        M=D\n        // Restore @THIS\n        @R13\n        D=M\n        @2\n        D=D-A\n        A=D\n        D=M\n        @THIS\n        M=D\n        // Restore @ARG\n        @R13\n        D=M\n        @3\n        D=D-A\n        A=D\n        D=M\n        @ARG\n        M=D\n        // Restore @LCL\n        @R13\n        D=M\n        @4\n        D=D-A\n        A=D\n        D=M\n        @LCL\n        M=D\n        // Jump to returnAddressLabel\n        @R14\n        A=M\n        0;JMP\n    ");
+    };
+    CodeWriter.prototype.writeCallInstruction = function (instruction) {
+        if (instruction.type !== 'C_CALL')
+            return;
+        var returnLabel = "".concat(this.functionName, "$ret.").concat(this.returnCounter);
+        this.writeOnOutputFile("\n      // ".concat(instruction.comment, "\n        // push returnLabel\n        @").concat(returnLabel, "\n        D=A\n        @SP\n        A=M\n        M=D\n        @SP\n        M=M+1\n        // push current LCL\n        @LCL\n        D=M\n        @SP\n        A=M\n        M=D\n        @SP\n        M=M+1\n        // push current ARG\n        @ARG\n        D=M\n        @SP\n        A=M\n        M=D\n        @SP\n        M=M+1\n        // push current THIS\n        @THIS\n        D=M\n        @SP\n        A=M\n        M=D\n        @SP\n        M=M+1\n        // push current THAT\n        @THAT\n        D=M\n        @SP\n        A=M\n        M=D\n        @SP\n        M=M+1\n        // ARG = SP - (5 + numberOfArgs)\n        @SP\n        D=M\n        @").concat(5 + instruction.numberOfArgs, "\n        D=D-A\n        @ARG\n        M=D\n        // LCL = SP\n        @SP\n        D=M\n        @LCL\n        M=D\n        // Jump to function\n        @").concat(instruction.name, "\n        0;JMP\n      (").concat(returnLabel, ")      \n    "));
+        this.returnCounter++;
+    };
     CodeWriter.prototype.createOutputFile = function (filename) {
-        this.outputFile = fs.createWriteStream(path.resolve(process.cwd(), filename.replace('.vm', '.asm')), { flags: 'w' });
+        this.outputFile = fs.createWriteStream(path.resolve(process.cwd(), filename, "".concat(this.programName, ".asm")), { flags: 'w' });
     };
     CodeWriter.prototype.writeOnOutputFile = function (instruction) {
         // console.log(instruction)

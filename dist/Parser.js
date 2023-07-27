@@ -35,9 +35,13 @@ var Parser = /** @class */ (function () {
         this.updateNextInstruction();
     }
     Parser.prototype.getFileFromDisk = function (filename) {
-        this.file = fs.readFileSync(path.resolve(process.cwd(), filename), {
-            encoding: "utf-8",
-            flag: "r"
+        var _this = this;
+        var completePath = path.resolve(process.cwd(), filename);
+        fs.readdirSync(completePath).forEach(function (file) {
+            if (file.endsWith('.vm')) {
+                var fileContent = fs.readFileSync(path.resolve(completePath, file)).toString();
+                _this.file += fileContent;
+            }
         });
     };
     Parser.prototype.hasNextInstruction = function () {
@@ -75,6 +79,36 @@ var Parser = /** @class */ (function () {
                 type: 'C_POP',
                 segment: instructionParts[1],
                 value: Number(instructionParts[2]),
+                comment: instruction
+            };
+        }
+        if (['label', 'if-goto', 'goto'].includes(instructionParts[0])) {
+            return {
+                type: 'C_BRANCHING',
+                command: instructionParts[0],
+                name: instructionParts[1],
+                comment: instruction
+            };
+        }
+        if (instructionParts[0] === 'function') {
+            return {
+                type: 'C_FUNCTION',
+                name: instructionParts[1],
+                numberOfLocals: Number(instructionParts[2]),
+                comment: instruction
+            };
+        }
+        if (instructionParts[0] === 'call') {
+            return {
+                type: 'C_CALL',
+                name: instructionParts[1],
+                numberOfArgs: Number(instructionParts[2]),
+                comment: instruction
+            };
+        }
+        if (instructionParts[0] === 'return') {
+            return {
+                type: 'C_RETURN',
                 comment: instruction
             };
         }
