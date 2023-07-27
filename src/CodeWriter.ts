@@ -11,6 +11,7 @@ export default class CodeWriter {
     'this': 'THIS',
     'that': 'THAT'
   } as Record<string, string>;
+  private functionName!: string;
 
   constructor(filename: string) {
     this.staticName = path.basename(filename).replace('.vm', '');
@@ -223,7 +224,7 @@ export default class CodeWriter {
     if (instruction.command === 'label') {
       this.writeOnOutputFile(`
         // ${instruction.comment}      
-        (${instruction.name})
+        (${this.functionName}$${instruction.name})
       `);
     }
 
@@ -234,7 +235,7 @@ export default class CodeWriter {
         M=M-1
         A=M
         D=M
-        @${instruction.name}
+        @${this.functionName}$${instruction.name}
         D;JNE
       `);
     }
@@ -242,7 +243,7 @@ export default class CodeWriter {
     if (instruction.command === 'goto') {
       this.writeOnOutputFile(`
         // ${instruction.comment}      
-        @${instruction.name}
+        @${this.functionName}$${instruction.name}
         0;JMP
       `);
     }
@@ -250,6 +251,8 @@ export default class CodeWriter {
 
   public writeFunctionInstruction(instruction: Instruction): void {
     if (instruction.type !== 'C_FUNCTION') return;
+
+    this.functionName = instruction.name;
 
     this.writeOnOutputFile(`
       // ${instruction.comment}      
